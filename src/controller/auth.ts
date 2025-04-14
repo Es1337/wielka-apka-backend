@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 
 const jwt = require('jsonwebtoken');
-const Login = require('../../models/loginModel');
+const Login = require('../models/loginModel');
 const secretkey = require('../../config/secret.json');
 
 const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {

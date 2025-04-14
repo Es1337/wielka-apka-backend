@@ -6,7 +6,7 @@ const OAuth2Client = require('google-auth-library');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const secretkey = require('../config/secret.json');
-const Login = require('../models/loginModel');
+const Login = require('./models/loginModel');
 const { authenticateUser } = require('./controller/auth');
 
 const app = express();
