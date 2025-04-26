@@ -1,43 +1,56 @@
-import express, { Request, Response } from 'express';
+import { CorsOptions } from 'cors';
+import express, { NextFunction, Request, Response } from 'express';
 
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
-const OAuth2Client = require('google-auth-library');
+const { OAuth2Client } = require('google-auth-library');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const secretkey = require('../config/secret.json');
 const Login = require('./models/loginModel');
 const { authenticateUser } = require('./controller/auth');
+const cors = require('cors')
+const morgan = require('morgan');
+
+const PORT = process.env.PORT || 2115;
+const ALLOWED_ORIGINS = ["http://localhost:5173"]
+const CORS_OPTIONS: CorsOptions = {
+    origin: function (origin: string | undefined, callback: CallableFunction) {
+        // allow requests with no origin 
+        // (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (ALLOWED_ORIGINS.indexOf(origin) === -1) {
+            var msg = 'The CORS policy for this site does not ' +
+                'allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+
+        return callback(null, true);
+    },
+    credentials: true
+};
 
 const app = express();
-const cors = require('cors')
-const port = process.env.PORT || 2115;
-
-app.use(cors());
+app.use(morgan('tiny'));
+app.use(cors(CORS_OPTIONS));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
 
-app.get('/', (req: Request, res: Response) => {
-    res.send('Hello, TypeScript Express!');
-}) 
-
-app.post('login/user', async (req: Request, res: Response) => {
+app.post('/login/user', async (req: Request, res: Response) => {
     const client = new OAuth2Client(process.env.CLIENT_ID);
-    const authId: {} = req.body;
-
+    const authId: {} = req.body.authId;
     try {
         const ticket = await client.verifyIdToken({
             idToken: authId,
             audience: process.env.CLIENT_ID
         });
-
+        
         const { name, email, picture } = ticket.getPayload();
-
         const loginToken = jwt.sign(`${email}`, secretkey.key);
-
         await Login.findOneAndUpdate({
             email
         }, {
@@ -46,7 +59,6 @@ app.post('login/user', async (req: Request, res: Response) => {
         }, {
             upsert: true
         });
-
         res.status(200).cookie('login', loginToken, { expires: new Date(360000 + Date.now()) }).send({
             success: true
         });
@@ -85,6 +97,6 @@ app.get('/user/checkLoginStatus', authenticateUser, async (req: Request, res: Re
 });
 
 
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
 })
