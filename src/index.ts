@@ -1,5 +1,5 @@
 import { CorsOptions } from 'cors';
-import express, { NextFunction, Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
