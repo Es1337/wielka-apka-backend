@@ -1,5 +1,6 @@
 import { CorsOptions } from 'cors';
 import express, { Request, Response } from 'express';
+const routes = require('./routes')
 
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
@@ -7,13 +8,13 @@ const { OAuth2Client } = require('google-auth-library');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const secretkey = require('../config/secret.json');
-const Login = require('./models/loginModel');
+const { GoogleUser } = require('./models/userModel');
 const { authenticateUser } = require('./controller/auth');
 const cors = require('cors')
 const morgan = require('morgan');
 
 const PORT = process.env.PORT || 2115;
-const ALLOWED_ORIGINS = ["http://localhost:5173"]
+const ALLOWED_ORIGINS = ["http://127.0.0.1:5173", "http://localhost:5173"]
 const CORS_OPTIONS: CorsOptions = {
     origin: function (origin: string | undefined, callback: CallableFunction) {
         // allow requests with no origin 
@@ -51,7 +52,7 @@ app.post('/login/user', async (req: Request, res: Response) => {
         
         const { name, email, picture } = ticket.getPayload();
         const loginToken = jwt.sign(`${email}`, secretkey.key);
-        await Login.findOneAndUpdate({
+        await GoogleUser.findOneAndUpdate({
             email
         }, {
             name,
@@ -59,7 +60,7 @@ app.post('/login/user', async (req: Request, res: Response) => {
         }, {
             upsert: true
         });
-        res.status(200).cookie('login', loginToken, { expires: new Date(360000 + Date.now()) }).send({
+        res.status(200).cookie('login', loginToken, { sameSite: "none", secure: true, expires: new Date(36000000 + Date.now()) }).send({
             success: true
         });
     }
@@ -96,7 +97,8 @@ app.get('/user/checkLoginStatus', authenticateUser, async (req: Request, res: Re
     }
 });
 
+app.use('/group', authenticateUser, routes.groupRouter)
 
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Server running at http://127.0.0.1:${PORT}`);
 })
