@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
+import { GoogleUser } from '../models';
 
 const jwt = require('jsonwebtoken');
-const { GoogleUser } = require('../models/userModel');
 const secretkey = require('../../config/secret.json');
 
 const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
