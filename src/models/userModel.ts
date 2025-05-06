@@ -1,5 +1,5 @@
 require('../../db-connection');
-import mongoose from  "./mongoose"
+const mongoose = require('mongoose')
 
 export const GoogleUserSchema = mongoose.Schema({
     email: {
