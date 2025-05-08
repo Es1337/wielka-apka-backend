@@ -13,6 +13,7 @@ export async function getGroup(req: Request, res: Response) {
         return res.status(200).send(group);
     } catch (e) {
         console.error(`Error fetching group with ID ${req.params.id}:`, e);
+        return res.status(500).send();
     }
 }
 
@@ -32,6 +33,7 @@ export async function createGroup(req: Request, res: Response) {
         return res.status(200).send(group);
     } catch (e) {
         console.error(`Error during creating a group :`, e);
+        return res.status(500).send();
     }
     
 }
@@ -44,6 +46,7 @@ export async function deleteGroup(req: Request, res: Response) {
         return res.status(200).send();
     } catch (e) {
         console.error(`Error during deleting a group with id ${req.params.id}:`, e);
+        return res.status(500).send();
     }
 }
 
@@ -65,6 +68,7 @@ export async function updateGroupName(req: Request, res: Response) {
         return res.status(200).send();
     } catch (e) {
         console.error(`Error during updating a group with id ${req.params.id}:`, e);
+        return res.status(500).send();
     }
 }
 
@@ -82,6 +86,50 @@ export async function getGroupsForUser(req: Request, res: Response) {
         console.log(groups);
         return res.status(200).send(groups);
     } catch (e) {
-        console.error(`Error fetching groups for user with ID ${res.locals.user}:`, e)
+        console.error(`Error fetching groups for user with ID ${res.locals.user}:`, e);
+        return res.status(500).send();
+    }
+}
+
+export async function addUserToGroup(req: Request, res: Response) {
+    try {
+        let group = await Group.updateOne({ 
+            _id: req.params.id
+        }, {
+            $push: { users: req.body.userId }
+        });
+
+        if (!group) {
+            console.log(`Group to update with ID: ${req.params.id} not found.`);
+            return res.status(404).send();
+        }
+
+        return res.status(200).send();
+    } catch (e) {
+        console.error(`Error updating group with ID: ${req.params.id} with user with ID ${req.body.userId}:`, e);
+        return res.status(500).send();
+    }
+}
+
+export async function removeUserFromGroup(req: Request, res: Response) {
+    try {
+        console.log(`req.params.id: ${req.params.id}; req.body.userId: ${req.body.userId}`)
+
+        let group = await Group.updateOne({ 
+            _id: req.params.id
+        }, {
+            $pull: { users: req.body.userId }
+        });
+
+        if (!group) {
+            console.log(`Group to update with ID: ${req.params.id} not found.`);
+            return res.status(404).send();
+        }
+
+        console.log(group);
+        return res.status(200).send();
+    } catch (e) {
+        console.error(`Error removing user with ID ${req.body.userId} from group with ID: ${req.params.id}:`, e);
+        return res.status(500).send();
     }
 }

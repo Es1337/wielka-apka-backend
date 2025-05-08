@@ -6,7 +6,7 @@ const secretkey = require('../../config/secret.json');
 
 const authenticateUser = async (req: Request, res: Response, next: NextFunction) => {
     let idToken = req.cookies['login'];
-
+    
     try {
         const decodedMessage = jwt.verify(idToken, secretkey.key);
         const user = await GoogleUser.findOne({
@@ -18,6 +18,7 @@ const authenticateUser = async (req: Request, res: Response, next: NextFunction)
     }
     catch (e) {
         console.error("Mongo fetch error")
+        console.log(e);
         res.status(401).send({
             error: e
         })
