@@ -4,15 +4,15 @@ const { Types } = require('mongoose')
 
 export async function getGroup(req: Request, res: Response) {
     try {
-        console.log(req.params.id);
-        let group = await Group.findById(req.params.id).populate('users'); 
+        console.log(req.params.groupId);
+        let group = await Group.findById(req.params.groupId).populate('users'); 
         if (!group) {
-            console.log(`Group with ID ${req.params.id} not found.`);
+            console.log(`Group with ID ${req.params.groupId} not found.`);
             return res.status(404).send();
         }
         return res.status(200).send(group);
     } catch (e) {
-        console.error(`Error fetching group with ID ${req.params.id}:`, e);
+        console.error(`Error fetching group with ID ${req.params.groupId}:`, e);
         return res.status(500).send();
     }
 }
@@ -40,22 +40,22 @@ export async function createGroup(req: Request, res: Response) {
 
 export async function deleteGroup(req: Request, res: Response) {
     try {
-        console.log(`Delete group with id: ${req.params.id}`)
-        await Group.findByIdAndDelete(req.params.id);
+        console.log(`Delete group with id: ${req.params.groupId}`)
+        await Group.findByIdAndDelete(req.params.groupId);
 
         return res.status(200).send();
     } catch (e) {
-        console.error(`Error during deleting a group with id ${req.params.id}:`, e);
+        console.error(`Error during deleting a group with id ${req.params.groupId}:`, e);
         return res.status(500).send();
     }
 }
 
 export async function updateGroupName(req: Request, res: Response) {
     try {
-        console.log(`Updating group with id: ${req.params.id}`)
+        console.log(`Updating group with id: ${req.params.groupId}`)
 
         let group = await Group.updateOne({ 
-            "_id": new Types.ObjectId(req.params.id)
+            "_id": new Types.ObjectId(req.params.groupId)
         }, {
             "groupName": req.body.groupName
         });
@@ -67,7 +67,7 @@ export async function updateGroupName(req: Request, res: Response) {
 
         return res.status(200).send();
     } catch (e) {
-        console.error(`Error during updating a group with id ${req.params.id}:`, e);
+        console.error(`Error during updating a group with id ${req.params.groupId}:`, e);
         return res.status(500).send();
     }
 }
@@ -94,42 +94,42 @@ export async function getGroupsForUser(req: Request, res: Response) {
 export async function addUserToGroup(req: Request, res: Response) {
     try {
         let group = await Group.updateOne({ 
-            _id: req.params.id
+            _id: req.params.groupId
         }, {
             $push: { users: req.body.userId }
         });
 
         if (!group) {
-            console.log(`Group to update with ID: ${req.params.id} not found.`);
+            console.log(`Group to update with ID: ${req.params.groupId} not found.`);
             return res.status(404).send();
         }
 
         return res.status(200).send();
     } catch (e) {
-        console.error(`Error updating group with ID: ${req.params.id} with user with ID ${req.body.userId}:`, e);
+        console.error(`Error updating group with ID: ${req.params.groupId} with user with ID ${req.body.userId}:`, e);
         return res.status(500).send();
     }
 }
 
 export async function removeUserFromGroup(req: Request, res: Response) {
     try {
-        console.log(`req.params.id: ${req.params.id}; req.body.userId: ${req.body.userId}`)
+        console.log(`req.params.id: ${req.params.groupId}; req.body.userId: ${req.body.userId}`)
 
         let group = await Group.updateOne({ 
-            _id: req.params.id
+            _id: req.params.groupId
         }, {
             $pull: { users: req.body.userId }
         });
 
         if (!group) {
-            console.log(`Group to update with ID: ${req.params.id} not found.`);
+            console.log(`Group to update with ID: ${req.params.groupId} not found.`);
             return res.status(404).send();
         }
 
         console.log(group);
         return res.status(200).send();
     } catch (e) {
-        console.error(`Error removing user with ID ${req.body.userId} from group with ID: ${req.params.id}:`, e);
+        console.error(`Error removing user with ID ${req.body.userId} from group with ID: ${req.params.groupId}:`, e);
         return res.status(500).send();
     }
 }

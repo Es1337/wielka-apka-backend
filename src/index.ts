@@ -41,6 +41,12 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
+declare module "express-serve-static-core" {
+    interface Request {
+      groupId?: String;
+    }
+  }
+
 app.post('/login/user', async (req: Request, res: Response) => {
     const client = new OAuth2Client(process.env.CLIENT_ID);
     const authId: {} = req.body.authId;

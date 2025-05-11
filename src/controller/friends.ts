@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { GoogleUser } from '../models';
-const { Types } = require('mongoose')
 
 export async function getFriendsForUser(req: Request, res: Response) {
     try {
