@@ -12,7 +12,10 @@ export const GoogleUserSchema = mongoose.Schema({
     },
     picture: {
         type: String
-    }
+    },
+    friends: [
+        { type: mongoose.Schema.Types.ObjectId, ref: 'googleUser' }
+    ],
 });
 
 const GoogleUser = mongoose.model('googleUser', GoogleUserSchema);

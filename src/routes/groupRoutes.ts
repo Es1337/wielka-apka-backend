@@ -1,13 +1,13 @@
-const controller = require('../controller/group');
-const router = require('express').Router();
+const groupController = require('../controller/group');
+const groupRouter = require('express').Router();
 
-router.get('/user', controller.getGroupsForUser);
-router.post('/:id/user', controller.addUserToGroup);
-router.delete('/:id/user', controller.removeUserFromGroup);
+groupRouter.get('/user', groupController.getGroupsForUser);
+groupRouter.post('/:id/user', groupController.addUserToGroup);
+groupRouter.delete('/:id/user', groupController.removeUserFromGroup);
 
-router.get('/:id', controller.getGroup);
-router.put('/:id', controller.updateGroupName);
-router.delete('/:id', controller.deleteGroup);
-router.post('/', controller.createGroup);
+groupRouter.get('/:id', groupController.getGroup);
+groupRouter.put('/:id', groupController.updateGroupName);
+groupRouter.delete('/:id', groupController.deleteGroup);
+groupRouter.post('/', groupController.createGroup);
 
-module.exports = router;
+module.exports = groupRouter;

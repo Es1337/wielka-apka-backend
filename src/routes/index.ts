@@ -1,5 +1,5 @@
-const groupRouter = require('./groupRoutes')
 
 module.exports = {
-    groupRouter
+    groupRoutes: require('./groupRoutes'),
+    friendRoutes: require('./friendRoutes')
 }
