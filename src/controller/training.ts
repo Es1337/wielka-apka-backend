@@ -4,7 +4,6 @@ const { Types } = require('mongoose')
 
 export async function getAllTrainingsForGroup(req: Request, res: Response) {
     try {
-        console.log(req.groupId);
         let trainings = await Training.aggregate([
             {
                 "$match": { group: new Types.ObjectId(req.groupId) },
@@ -18,6 +17,140 @@ export async function getAllTrainingsForGroup(req: Request, res: Response) {
         return res.status(200).send(trainings);
     } catch (e) {
         console.error(`Error fetching trainings for group with ID ${req.groupId}:`, e);
+        return res.status(500).send();
+    }
+}
+
+export async function addTraining(req: Request, res: Response) {
+    try {
+        let training = await Training.create({
+            "group": new Types.ObjectId(req.groupId),
+            "name": req.body.trainingName
+        });
+
+        console.log(training);
+        return res.status(200).send(training);
+    } catch (e) {
+        console.error(`Error adding training for group with ID ${req.groupId}:`, e);
+        return res.status(500).send();
+    }
+}
+
+export async function removeTraining(req: Request, res: Response) {
+    try {
+        let training = await Training.findByIdAndDelete(req.params.trainingId);
+
+        console.log(training);
+        return res.status(200).send();
+    } catch (e) {
+        console.error(`Error removing training for group with ID ${req.groupId}:`, e);
+        return res.status(500).send();
+    }
+}
+
+export async function updateTrainingName(req: Request, res: Response) {
+    try {
+        console.log(`Updating training with id: ${req.params.trainingId}`)
+        console.log(req.body.trainingName);
+
+        let training = await Training.updateOne({ 
+            "_id": new Types.ObjectId(req.params.trainingId)
+        }, {
+            "name": req.body.trainingName
+        });
+
+        if (!training) {
+            console.log(`Training not updated.`);
+            return res.status(404).send();
+        }
+
+        return res.status(200).send();
+    } catch (e) {
+        console.error(`Error during updating training with id ${req.params.trainingId}:`, e);
+        return res.status(500).send();
+    }
+}
+
+export async function addTrainingExercise(req: Request, res: Response) {
+    try {
+        let training = await Training.updateOne({ 
+            "_id": new Types.ObjectId(req.params.trainingId)
+        }, {
+            "$push": { exercises: { name: req.body.exerciseName } }
+        });
+
+        if (!training) {
+            console.log(`Training not updated.`);
+            return res.status(404).send();
+        }
+
+        return res.status(200).send();
+    } catch (e) {
+        console.error(`Error during updating training with id ${req.params.trainingId}:`, e);
+        return res.status(500).send();
+    }
+}
+
+export async function removeTrainingExercise(req: Request, res: Response) {
+    try {
+        console.log('delete');
+        let training = await Training.updateOne({ 
+            "_id": new Types.ObjectId(req.params.trainingId)
+        }, {
+            "$pull": { exercises: { _id: req.params.exerciseId } }
+        });
+
+        if (!training) {
+            console.log(`Training not updated.`);
+            return res.status(404).send();
+        }
+
+        return res.status(200).send();
+    } catch (e) {
+        console.error(`Error during updating training with id ${req.params.trainingId}:`, e);
+        return res.status(500).send();
+    }
+}
+
+type Training = {
+    _id: string,
+    name: string,
+    group: string,
+    exercises: Exercise[]
+}
+
+type Exercise = {
+    _id: string,
+    name: string,
+    sets: Set[]
+}
+
+type Set = {
+    _id: string,
+    user: string,
+    weight: number,
+    reps: number
+}
+
+export async function updateTrainingExerciseName(req: Request, res: Response) {
+    try {
+        let training: Training = await Training.updateOne({ 
+            "_id": new Types.ObjectId(req.params.trainingId),
+            "exercises._id": new Types.ObjectId(req.params.exerciseId)
+        }, {
+            "$set": { "exercises.$.name": req.body.exerciseName }
+        });
+
+        console.log(training);
+
+        if (!training) {
+            console.log(`Training not updated.`);
+            return res.status(404).send();
+        }
+
+        return res.status(200).send();
+    } catch (e) {
+        console.error(`Error during updating training with id ${req.params.trainingId}:`, e);
         return res.status(500).send();
     }
 }
