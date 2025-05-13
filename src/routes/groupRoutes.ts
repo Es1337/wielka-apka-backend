@@ -14,7 +14,7 @@ groupRouter.post('/:groupId/user', groupController.addUserToGroup);
 groupRouter.delete('/:groupId/user', groupController.removeUserFromGroup);
 
 groupRouter.get('/:groupId', groupController.getGroup);
-groupRouter.put('/:groupId', groupController.updateGroupName);
+groupRouter.patch('/:groupId', groupController.updateGroupName);
 groupRouter.delete('/:groupId', groupController.deleteGroup);
 groupRouter.post('/', groupController.createGroup);
 

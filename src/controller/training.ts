@@ -154,3 +154,84 @@ export async function updateTrainingExerciseName(req: Request, res: Response) {
         return res.status(500).send();
     }
 }
+
+export async function addSetToExercise(req: Request, res: Response) {
+    try {
+        const training = await Training.updateOne(
+            {
+                "_id": new Types.ObjectId(req.params.trainingId),
+                "exercises._id": new Types.ObjectId(req.params.exerciseId)
+            },
+            {
+                "$push": { "exercises.$.sets": req.body.set }
+            }
+        );
+
+        if (!training) {
+            console.log(`Training or exercise not found.`);
+            return res.status(404).send();
+        }
+
+        return res.status(200).send();
+    } catch (e) {
+        console.error(`Error adding set to exercise in training with ID ${req.params.trainingId}:`, e);
+        return res.status(500).send();
+    }
+}
+
+export async function removeSetFromExercise(req: Request, res: Response) {
+    try {
+        const training = await Training.updateOne(
+            {
+                "_id": new Types.ObjectId(req.params.trainingId),
+                "exercises._id": new Types.ObjectId(req.params.exerciseId)
+            },
+            {
+                "$pull": { "exercises.$.sets": { "_id": new Types.ObjectId(req.params.setId) } }
+            }
+        );
+
+        if (!training) {
+            console.log(`Training, exercise, or set not found.`);
+            return res.status(404).send();
+        }
+
+        return res.status(200).send();
+    } catch (e) {
+        console.error(`Error removing set from exercise in training with ID ${req.params.trainingId}:`, e);
+        return res.status(500).send();
+    }
+}
+
+export async function updateSetInExercise(req: Request, res: Response) {
+    try {
+        const training = await Training.updateOne(
+            {
+                "_id": new Types.ObjectId(req.params.trainingId),
+                "exercises._id": new Types.ObjectId(req.params.exerciseId),
+                "exercises.sets._id": new Types.ObjectId(req.params.setId)
+            },
+            {
+                "$set": {
+                    "exercises.$[exercise].sets.$[set]": req.body.set
+                }
+            },
+            {
+                arrayFilters: [
+                    { "exercise._id": new Types.ObjectId(req.params.exerciseId) },
+                    { "set._id": new Types.ObjectId(req.params.setId) }
+                ]
+            }
+        );
+
+        if (!training) {
+            console.log(`Training, exercise, or set not found.`);
+            return res.status(404).send();
+        }
+
+        return res.status(200).send();
+    } catch (e) {
+        console.error(`Error updating set in exercise in training with ID ${req.params.trainingId}:`, e);
+        return res.status(500).send();
+    }
+}
