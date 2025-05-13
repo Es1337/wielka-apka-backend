@@ -11,7 +11,7 @@ const trainingSchema = mongoose.Schema({
             name: String,
             sets: [
                 new mongoose.Schema({
-                    user: { type: mongoose.Types.ObjectId, ref: 'GoogleUser' },
+                    user: { type: mongoose.Types.ObjectId, ref: 'googleUser' },
                     weight: Number,
                     reps: Number
                 })

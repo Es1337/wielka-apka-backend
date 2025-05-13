@@ -3,6 +3,7 @@ const trainingRouter = require('express').Router();
 
 trainingRouter.get('', trainingController.getAllTrainingsForGroup);
 trainingRouter.post('', trainingController.addTraining);
+trainingRouter.get('/:trainingId', trainingController.getTraining);
 trainingRouter.patch('/:trainingId', trainingController.updateTrainingName);
 trainingRouter.delete('/:trainingId', trainingController.removeTraining);
 

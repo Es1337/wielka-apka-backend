@@ -21,6 +21,22 @@ export async function getAllTrainingsForGroup(req: Request, res: Response) {
     }
 }
 
+export async function getTraining(req: Request, res: Response) {
+    try {
+        const training = await Training.findById(req.params.trainingId).populate('exercises.sets.user');
+
+        if (!training) {
+            console.log(`Training with ID ${req.params.trainingId} not found.`);
+            return res.status(404).send();
+        }
+
+        return res.status(200).send(training);
+    } catch (e) {
+        console.error(`Error fetching training with ID ${req.params.trainingId}:`, e);
+        return res.status(500).send();
+    }
+}
+
 export async function addTraining(req: Request, res: Response) {
     try {
         let training = await Training.create({
@@ -112,29 +128,9 @@ export async function removeTrainingExercise(req: Request, res: Response) {
     }
 }
 
-type Training = {
-    _id: string,
-    name: string,
-    group: string,
-    exercises: Exercise[]
-}
-
-type Exercise = {
-    _id: string,
-    name: string,
-    sets: Set[]
-}
-
-type Set = {
-    _id: string,
-    user: string,
-    weight: number,
-    reps: number
-}
-
 export async function updateTrainingExerciseName(req: Request, res: Response) {
     try {
-        let training: Training = await Training.updateOne({ 
+        let training = await Training.updateOne({ 
             "_id": new Types.ObjectId(req.params.trainingId),
             "exercises._id": new Types.ObjectId(req.params.exerciseId)
         }, {
