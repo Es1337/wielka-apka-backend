@@ -18,10 +18,12 @@ export async function getGroup(req: Request, res: Response) {
 }
 
 export async function createGroup(req: Request, res: Response) {
+    let userId = req.body.userId || res.locals.user;
+
     try {
         let group = await Group.create({
             "groupName": req.body.groupName,
-            "users": [req.body.userId],
+            "users": [userId],
             "date": Date.now()
         })
 
