@@ -2,7 +2,9 @@ require('../../db-connection');
 const mongoose = require('mongoose')
 
 const trainingSchema = mongoose.Schema({
-    name: String,
+    trainingName: { 
+        type: String
+    },
     group: { 
         type: mongoose.Schema.Types.ObjectId, ref: 'Group'
     },
@@ -17,7 +19,11 @@ const trainingSchema = mongoose.Schema({
                 })
             ]
         })
-    ]
+    ],
+    date: {
+        type: Date,
+        default: Date.now
+    }
 });
 
 trainingSchema.index({ group: 1 });

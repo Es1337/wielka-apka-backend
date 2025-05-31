@@ -41,7 +41,9 @@ export async function addTraining(req: Request, res: Response) {
     try {
         let training = await Training.create({
             "group": new Types.ObjectId(req.groupId),
-            "name": req.body.trainingName
+            "trainingName": req.body.trainingName,
+            "date": req.body.date,
+            "exercises": []
         });
 
         console.log(training);
@@ -64,7 +66,7 @@ export async function removeTraining(req: Request, res: Response) {
     }
 }
 
-export async function updateTrainingName(req: Request, res: Response) {
+export async function updateTraining(req: Request, res: Response) {
     try {
         console.log(`Updating training with id: ${req.params.trainingId}`)
         console.log(req.body.trainingName);
@@ -72,7 +74,8 @@ export async function updateTrainingName(req: Request, res: Response) {
         let training = await Training.updateOne({ 
             "_id": new Types.ObjectId(req.params.trainingId)
         }, {
-            "name": req.body.trainingName
+            "name": req.body.trainingName,
+            "date": req.body.date || Date.now()
         });
 
         if (!training) {

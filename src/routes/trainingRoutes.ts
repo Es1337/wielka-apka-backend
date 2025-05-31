@@ -4,7 +4,7 @@ const trainingRouter = require('express').Router();
 trainingRouter.get('', trainingController.getAllTrainingsForGroup);
 trainingRouter.post('', trainingController.addTraining);
 trainingRouter.get('/:trainingId', trainingController.getTraining);
-trainingRouter.patch('/:trainingId', trainingController.updateTrainingName);
+trainingRouter.patch('/:trainingId', trainingController.updateTraining);
 trainingRouter.delete('/:trainingId', trainingController.removeTraining);
 
 trainingRouter.post('/:trainingId/exercise', trainingController.addTrainingExercise);
