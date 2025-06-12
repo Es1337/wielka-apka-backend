@@ -7,6 +7,7 @@ trainingRouter.get('/:trainingId', trainingController.getTraining);
 trainingRouter.patch('/:trainingId', trainingController.updateTraining);
 trainingRouter.delete('/:trainingId', trainingController.removeTraining);
 
+trainingRouter.get('/:trainingId/exercise/:exerciseName', trainingController.getTrainingExercise);
 trainingRouter.post('/:trainingId/exercise', trainingController.addTrainingExercise);
 trainingRouter.patch('/:trainingId/exercise/:exerciseId', trainingController.updateTrainingExerciseName);
 trainingRouter.delete('/:trainingId/exercise/:exerciseId', trainingController.removeTrainingExercise);

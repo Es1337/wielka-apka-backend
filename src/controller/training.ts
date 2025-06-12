@@ -90,6 +90,37 @@ export async function updateTraining(req: Request, res: Response) {
     }
 }
 
+type ExerciseType = {
+    name: string;
+    sets: Array<{
+        user: string;
+        weight: number;
+        reps: number;
+    }>;
+};
+
+export async function getTrainingExercise(req: Request, res: Response) {
+    try {
+        let training = await Training.findById(req.params.trainingId);
+
+        if (!training) {
+            console.log(`Training not found.`);
+            return res.status(404).send();
+        }
+
+        let exercise = training.exercises.filter((exercise: ExerciseType) => exercise.name === req.params.exerciseName);
+        if (!exercise) {
+            console.log(`Exercise with name ${req.params.exerciseName} not found in training with ID ${req.params.trainingId}.`);
+            return res.status(404).send();
+        }
+
+        return res.status(200).send(exercise);
+    } catch (e) {
+        console.error(`Error fetching training with ID ${req.params.trainingId}:`, e);        
+        return res.status(500).send();
+    }
+}
+
 export async function addTrainingExercise(req: Request, res: Response) {
     try {
         let training = await Training.updateOne({ 
