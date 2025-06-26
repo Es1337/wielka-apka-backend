@@ -12,8 +12,12 @@ trainingRouter.post('/:trainingId/exercise', trainingController.addTrainingExerc
 trainingRouter.patch('/:trainingId/exercise/:exerciseId', trainingController.updateTrainingExerciseName);
 trainingRouter.delete('/:trainingId/exercise/:exerciseId', trainingController.removeTrainingExercise);
 
-trainingRouter.post('/:trainingId/exercise/:exerciseId/set', trainingController.addSetToExercise);
-trainingRouter.put('/:trainingId/exercise/:exerciseId/set/:setId', trainingController.updateSetInExercise);
-trainingRouter.delete('/:trainingId/exercise/:exerciseId/set/:setId', trainingController.removeSetFromExercise);
+trainingRouter.get('/:trainingId/exercise/:exerciseId/series', trainingController.getExerciseSeries);
+trainingRouter.get('/:trainingId/exercise/:exerciseId/series/:seriesId', trainingController.getExerciseSeriesById);
+trainingRouter.post('/:trainingId/exercise/:exerciseId/series', trainingController.addSeriesToExercise);
+
+trainingRouter.post('/:trainingId/exercise/:exerciseId/series/set', trainingController.addSetToExercise);
+trainingRouter.put('/:trainingId/exercise/:exerciseId/series/set/:setId', trainingController.updateSetInExercise);
+trainingRouter.delete('/:trainingId/exercise/:exerciseId/series/set/:setId', trainingController.removeSetFromExercise);
 
 module.exports = trainingRouter;
