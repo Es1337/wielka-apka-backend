@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Training, Set } from '../models';
+import { Training, Exercise } from '../models';
 import { populate } from 'dotenv';
 const { Types } = require('mongoose')
 
@@ -96,17 +96,22 @@ export async function updateTraining(req: Request, res: Response) {
 }
 
 type ExerciseType = {
+    _id: string;
     name: string;
+    user: string;
     sets: Array<{
-        user: string;
         weight: number;
         reps: number;
+        count: number;
     }>;
+    date: Date;
 };
 
 export async function getTrainingExercise(req: Request, res: Response) {
     try {
-        let training = await Training.findById(req.params.trainingId);
+        let training = await Training.findById(req.params.trainingId).populate({ 
+                path: 'exercises'
+            });
 
         if (!training) {
             console.log(`Training not found.`);
@@ -128,10 +133,22 @@ export async function getTrainingExercise(req: Request, res: Response) {
 
 export async function addTrainingExercise(req: Request, res: Response) {
     try {
+        let exercise = await Exercise.create({
+            "name": req.body.exerciseName,
+            "user": new Types.ObjectId(req.body.userId),
+            "date": req.body.date || Date.now(),
+            "sets": []
+        });
+
+        if (!exercise) {
+            console.log(`Exercise not created.`);
+            return res.status(500).send();
+        }
+
         let training = await Training.updateOne({ 
             "_id": new Types.ObjectId(req.params.trainingId)
         }, {
-            "$push": { exercises: { name: req.body.exerciseName } }
+            "$push": { exercises: exercise._id }
         });
 
         if (!training) {
@@ -152,11 +169,17 @@ export async function removeTrainingExercise(req: Request, res: Response) {
         let training = await Training.updateOne({ 
             "_id": new Types.ObjectId(req.params.trainingId)
         }, {
-            "$pull": { exercises: { _id: req.params.exerciseId } }
+            "$pull": { exercises: req.params.exerciseId  }
         });
 
         if (!training) {
             console.log(`Training not updated.`);
+            return res.status(404).send();
+        }
+
+        let exercise = await Exercise.findByIdAndDelete(req.params.exerciseId);
+        if (!exercise) {
+            console.log(`Exercise not deleted.`);
             return res.status(404).send();
         }
 
@@ -169,131 +192,44 @@ export async function removeTrainingExercise(req: Request, res: Response) {
 
 export async function updateTrainingExerciseName(req: Request, res: Response) {
     try {
-        let training = await Training.updateOne({ 
-            "_id": new Types.ObjectId(req.params.trainingId),
-            "exercises._id": new Types.ObjectId(req.params.exerciseId)
+        let exercise = await Exercise.updateOne({
+            "_id": new Types.ObjectId(req.params.exerciseId)
         }, {
-            "$set": { "exercises.$.name": req.body.exerciseName }
+            "name": req.body.exerciseName
         });
 
-        console.log(training);
+        console.log(exercise);
 
-        if (!training) {
-            console.log(`Training not updated.`);
+        if (!exercise) {
+            console.log(`Exercise not updated.`);
             return res.status(404).send();
         }
 
         return res.status(200).send();
     } catch (e) {
-        console.error(`Error during updating training with id ${req.params.trainingId}:`, e);
-        return res.status(500).send();
-    }
-}
-
-// Get all series for an exercise
-export async function getExerciseSeries(req: Request, res: Response) {
-    try {
-        const training = await Training.findById(req.params.trainingId);
-        if (!training) {
-            console.log(`Training not found.`);
-            return res.status(404).send();
-        }
-
-        const exercise = training.exercises.id(req.params.exerciseId);
-        if (!exercise) {
-            console.log(`Exercise with ID ${req.params.exerciseId} not found in training with ID ${req.params.trainingId}.`);
-            return res.status(404).send();
-        }
-
-        return res.status(200).send(exercise.series);
-    } catch (e) {
-        console.error(`Error fetching series:`, e);
-        return res.status(500).send();
-    }
-}
-
-// Get a single series by ID
-export async function getExerciseSeriesById(req: Request, res: Response) {
-    try {
-        const training = await Training.findById(req.params.trainingId);
-        if (!training) {
-            console.log(`Training not found.`);
-            return res.status(404).send();
-        }
-
-        const exercise = training.exercises.id(req.params.exerciseId);
-        if (!exercise) {
-            console.log(`Exercise with ID ${req.params.exerciseId} not found in training with ID ${req.params.trainingId}.`);
-            return res.status(404).send();
-        }
-
-        const series = exercise.series.id(req.params.seriesId);
-        if (!series) {
-            console.log(`Series with ID ${req.params.seriesId} not found in exercise with ID ${req.params.exerciseId}.`);
-            return res.status(404).send();
-        }
-
-        return res.status(200).send(series);
-    } catch (e) {
-        console.error(`Error fetching series by id:`, e);
-        return res.status(500).send();
-    }
-}
-
-// Add a new series to an exercise
-export async function addSeriesToExercise(req: Request, res: Response) {
-    try {
-        const training = await Training.findById(req.params.trainingId);
-        if (!training) {
-            console.log(`Training not found.`);
-            return res.status(404).send();
-        }
-
-        const exercise = training.exercises.id(req.params.exerciseId);
-        if (!exercise) {
-            console.log(`Exercise with ID ${req.params.exerciseId} not found in training with ID ${req.params.trainingId}.`);
-            return res.status(404).send();
-        }
-
-        exercise.series.push({ sets: [] });
-        await training.save();
-
-        return res.status(200).send(exercise.series[exercise.series.length - 1]);
-    } catch (e) {
-        console.error(`Error adding series:`, e);
+        console.error(`Error during updating exercise with id ${req.params.exerciseId}:`, e);
         return res.status(500).send();
     }
 }
 
 export async function addSetToExercise(req: Request, res: Response) {
     try {
-        const training = await Training.findById(req.params.trainingId);
-        if (!training) {
-            console.log(`Training not found.`);
-            return res.status(404).send();
-        }
-
-        const exercise = training.exercises.id(req.params.exerciseId);
-        if (!exercise) {
-            console.log(`Exercise with ID ${req.params.exerciseId} not found in training with ID ${req.params.trainingId}.`);
-            return res.status(404).send();
-        }
-
-        // Find the correct series
-        const series = exercise.series[0];
-        if (!series) {
-            console.log(`Series in exercise with ID ${req.params.exerciseId}.`);
-            return res.status(404).send();
-        }
-
-        let newSet = await Set.create(
-            req.body.set
+        const exercise = await Exercise.updateOne(
+            { "_id": new Types.ObjectId(req.params.exerciseId) },
+            { "$push": { 
+                sets: {
+                    weight: req.body.set.weight,
+                    reps: req.body.set.reps,
+                    count: req.body.set.count || (await Exercise.findOne({ "_id": new Types.ObjectId(req.params.exerciseId) })).sets.length + 1
+                } } }
         );
 
-        series.sets.push(newSet._id);
-        await training.save();
+        if (!exercise) {
+            console.log(`Exercise with ID ${req.params.exerciseId} could not be updated with new set.`);
+            return res.status(404).send();
+        }
 
-        return res.status(200).send(series.sets[series.sets.length - 1]);
+        return res.status(200).send();
     } catch (e) {
         console.error(`Error adding set to series in exercise in training with ID ${req.params.trainingId}:`, e);
         return res.status(500).send();
@@ -302,32 +238,16 @@ export async function addSetToExercise(req: Request, res: Response) {
 
 export async function removeSetFromExercise(req: Request, res: Response) {
     try {
-        const training = await Training.findById(req.params.trainingId);
-        if (!training) {
-            console.log(`Training not found.`);
-            return res.status(404).send();
-        }
+        // TODO: Add support for deleting sets from the middle
+        const exercise = await Exercise.updateOne(
+            { "_id": new Types.ObjectId(req.params.exerciseId) },
+            { "$pull": { sets: { count: req.params.count } } }
+        );
 
-        const exercise = training.exercises.id(req.params.exerciseId);
         if (!exercise) {
-            console.log(`Exercise with ID ${req.params.exerciseId} not found in training with ID ${req.params.trainingId}.`);
+            console.log(`Exercise with ID ${req.params.exerciseId} not found or couldn't remove set.`);
             return res.status(404).send();
         }
-
-        const series = exercise.series[0];
-        if (!series) {
-            console.log(`Series not found in exercise with ID ${req.params.exerciseId}.`);
-            return res.status(404).send();
-        }
-
-        const set = series.sets.id(req.params.setId);
-        if (!set) {
-            console.log(`Set with ID ${req.params.setId} not found in series with ID ${req.params.seriesId}.`);
-            return res.status(404).send();
-        }
-
-        set.remove();
-        await training.save();
 
         return res.status(200).send();
     } catch (e) {
@@ -338,33 +258,36 @@ export async function removeSetFromExercise(req: Request, res: Response) {
 
 export async function updateSetInExercise(req: Request, res: Response) {
     try {
-        const training = await Training.findById(req.params.trainingId);
-        if (!training) {
-            console.log(`Training not found.`);
-            return res.status(404).send();
+        const { exerciseId } = req.params;
+        let { count, weight, reps } = req.body.set;
+        
+        // TODO: Support for updating set count
+        // TODO: Make set count a computed field in the database
+        if (!count) {
+            count = req.params.count;
         }
 
-        const exercise = training.exercises.id(req.params.exerciseId);
+        // Find the exercise
+        const exercise = await Exercise.findById(exerciseId);
         if (!exercise) {
-            console.log(`Exercise with ID ${req.params.exerciseId} not found in training with ID ${req.params.trainingId}.`);
+            console.log(`Exercise with ID ${exerciseId} not found.`);
             return res.status(404).send();
         }
 
-        const series = exercise.series[0];
-        if (!series) {
-            console.log(`Series in exercise with ID ${req.params.exerciseId}.`);
+        // Find the set by count
+        const setIndex = exercise.sets.findIndex((s: any) => s.count === count);
+        if (setIndex === -1) {
+            console.log(`Set with count ${count} not found in exercise ${exerciseId}.`);
             return res.status(404).send();
         }
 
-        const set = series.sets.id(req.params.setId);
-        if (!set) {
-            console.log(`Set with ID ${req.params.setId} not found in series with ID ${req.params.seriesId}.`);
-            return res.status(404).send();
-        }
+        // Update set fields
+        if (weight !== undefined) exercise.sets[setIndex].weight = weight;
+        if (reps !== undefined) exercise.sets[setIndex].reps = reps;
 
-        Object.assign(set, req.body.set);
-        await training.save();
+        await exercise.save();
 
+        const set = exercise.sets[setIndex];
         return res.status(200).send(set);
     } catch (e) {
         console.error(`Error updating set in series in exercise in training with ID ${req.params.trainingId}:`, e);

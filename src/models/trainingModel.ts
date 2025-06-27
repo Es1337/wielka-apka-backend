@@ -1,12 +1,20 @@
-import { ref } from "process";
-
 require('../../db-connection');
 const mongoose = require('mongoose')
 
-const setSchema = mongoose.Schema({
+const exerciseSchema = mongoose.Schema({
+    name: { type: String, required: true },
     user: { type: mongoose.Types.ObjectId, ref: 'googleUser' },
-    weight: Number,
-    reps: Number
+    sets: [
+        new mongoose.Schema({
+            weight: { type: Number, required: true },
+            reps: { type: Number, required: true },
+            count: { type: Number, default: 0 },
+        })
+    ],
+    date: {
+        type: Date,
+        default: Date.now
+    }
 });
 
 const trainingSchema = mongoose.Schema({
@@ -17,14 +25,10 @@ const trainingSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, ref: 'Group'
     },
     exercises: [
-        new mongoose.Schema({
-            name: String,
-            series: [
-                new mongoose.Schema({
-                    sets: [ { type: mongoose.Types.ObjectId, ref: 'set' }],
-                })
-            ]
-        })
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'exercise'
+        }
     ],
     date: {
         type: Date,
@@ -34,6 +38,6 @@ const trainingSchema = mongoose.Schema({
 
 trainingSchema.index({ group: 1 });
 const Training = mongoose.model('training', trainingSchema);
-const Set = mongoose.model('set', setSchema);
+const Exercise = mongoose.model('exercise', exerciseSchema);
 
-module.exports = { Training, Set };
+module.exports = { Training, Exercise };

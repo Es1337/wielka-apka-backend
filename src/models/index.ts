@@ -6,4 +6,4 @@ export default mongoose;
 export const Group = require('./groupModel'); 
 export const { GoogleUser } = require('./userModel')
 export const Training = require('./trainingModel').Training;
-export const Set = require('./trainingModel').Set;
+export const Exercise = require('./trainingModel').Exercise;
