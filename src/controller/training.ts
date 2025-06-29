@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Training, Exercise } from '../models';
+import { Training, Exercise, Group } from '../models';
 import { populate } from 'dotenv';
 const { Types } = require('mongoose')
 
@@ -132,27 +132,32 @@ export async function getTrainingExercise(req: Request, res: Response) {
 
 export async function addTrainingExercise(req: Request, res: Response) {
     try {
-        let exercise = await Exercise.create({
-            "name": req.body.exerciseName,
-            "user": new Types.ObjectId(req.body.userId),
-            "date": req.body.date || Date.now(),
-            "sets": []
-        });
+        let group = await Group.findById(req.groupId);
 
-        if (!exercise) {
-            console.log(`Exercise not created.`);
-            return res.status(500).send();
-        }
-
-        let training = await Training.updateOne({ 
-            "_id": new Types.ObjectId(req.params.trainingId)
-        }, {
-            "$push": { exercises: exercise._id }
-        });
-
-        if (!training) {
-            console.log(`Training not updated.`);
-            return res.status(404).send();
+        for (let userId of group.users) {
+        
+            let exercise = await Exercise.create({
+                "name": req.body.exerciseName,
+                "user": new Types.ObjectId(userId),
+                "date": req.body.date || Date.now(),
+                "sets": []
+            });
+            
+            if (!exercise) {
+                console.log(`Exercise ${req.body.exerciseName} not created.`);
+                return res.status(500).send();
+            }
+            
+            let training = await Training.updateOne({ 
+                "_id": new Types.ObjectId(req.params.trainingId)
+            }, {
+                "$push": { exercises: exercise._id }
+            });
+            
+            if (!training) {
+                console.log(`Training ${req.params.trainingId} not updated.`);
+                return res.status(404).send();
+            }
         }
 
         return res.status(200).send();
