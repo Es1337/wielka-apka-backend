@@ -26,8 +26,7 @@ export async function getTraining(req: Request, res: Response) {
     try {
         const training = await Training.findById(req.params.trainingId)
             .populate({ 
-                path: 'exercises.series.sets',
-                populate: {path: 'user'}
+                path: 'exercises'
             });
 
         if (!training) {
@@ -231,7 +230,7 @@ export async function addSetToExercise(req: Request, res: Response) {
 
         return res.status(200).send();
     } catch (e) {
-        console.error(`Error adding set to series in exercise in training with ID ${req.params.trainingId}:`, e);
+        console.error(`Error adding set to exercise in training with ID ${req.params.trainingId}:`, e);
         return res.status(500).send();
     }
 }
@@ -251,7 +250,7 @@ export async function removeSetFromExercise(req: Request, res: Response) {
 
         return res.status(200).send();
     } catch (e) {
-        console.error(`Error removing set from series in exercise in training with ID ${req.params.trainingId}:`, e);
+        console.error(`Error removing set from exercise in training with ID ${req.params.trainingId}:`, e);
         return res.status(500).send();
     }
 }
@@ -290,7 +289,7 @@ export async function updateSetInExercise(req: Request, res: Response) {
         const set = exercise.sets[setIndex];
         return res.status(200).send(set);
     } catch (e) {
-        console.error(`Error updating set in series in exercise in training with ID ${req.params.trainingId}:`, e);
+        console.error(`Error updating set in exercise in training with ID ${req.params.trainingId}:`, e);
         return res.status(500).send();
     }
 }
