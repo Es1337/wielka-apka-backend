@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { Training, Exercise, Group } from '../models';
-import { populate } from 'dotenv';
 const { Types } = require('mongoose')
 
 export async function getAllTrainingsForGroup(req: Request, res: Response) {
@@ -25,7 +24,7 @@ export async function getAllTrainingsForGroup(req: Request, res: Response) {
 export async function getTraining(req: Request, res: Response) {
     try {
         const training = await Training.findById(req.params.trainingId)
-            .populate({ 
+            .populate({
                 path: 'exercises'
             });
 
@@ -75,7 +74,7 @@ export async function updateTraining(req: Request, res: Response) {
         console.log(`Updating training with id: ${req.params.trainingId}`)
         console.log(req.body.trainingName);
 
-        let training = await Training.updateOne({ 
+        let training = await Training.updateOne({
             "_id": new Types.ObjectId(req.params.trainingId)
         }, {
             "name": req.body.trainingName,
@@ -106,11 +105,18 @@ type ExerciseType = {
     date: Date;
 };
 
+type SetType = {
+    _id: string;
+    weight: number;
+    reps: number;
+    count: number;
+}
+
 export async function getTrainingExercise(req: Request, res: Response) {
     try {
-        let training = await Training.findById(req.params.trainingId).populate({ 
-                path: 'exercises'
-            });
+        let training = await Training.findById(req.params.trainingId).populate({
+            path: 'exercises'
+        });
 
         if (!training) {
             console.log(`Training not found.`);
@@ -125,7 +131,7 @@ export async function getTrainingExercise(req: Request, res: Response) {
 
         return res.status(200).send(exercise);
     } catch (e) {
-        console.error(`Error fetching training with ID ${req.params.trainingId}:`, e);        
+        console.error(`Error fetching training with ID ${req.params.trainingId}:`, e);
         return res.status(500).send();
     }
 }
@@ -135,25 +141,25 @@ export async function addTrainingExercise(req: Request, res: Response) {
         let group = await Group.findById(req.groupId);
 
         for (let userId of group.users) {
-        
+
             let exercise = await Exercise.create({
                 "name": req.body.exerciseName,
                 "user": new Types.ObjectId(userId),
                 "date": req.body.date || Date.now(),
                 "sets": []
             });
-            
+
             if (!exercise) {
                 console.log(`Exercise ${req.body.exerciseName} not created.`);
                 return res.status(500).send();
             }
-            
-            let training = await Training.updateOne({ 
+
+            let training = await Training.updateOne({
                 "_id": new Types.ObjectId(req.params.trainingId)
             }, {
                 "$push": { exercises: exercise._id }
             });
-            
+
             if (!training) {
                 console.log(`Training ${req.params.trainingId} not updated.`);
                 return res.status(404).send();
@@ -170,10 +176,10 @@ export async function addTrainingExercise(req: Request, res: Response) {
 export async function removeTrainingExercise(req: Request, res: Response) {
     try {
         console.log('delete');
-        let training = await Training.updateOne({ 
+        let training = await Training.updateOne({
             "_id": new Types.ObjectId(req.params.trainingId)
         }, {
-            "$pull": { exercises: req.params.exerciseId  }
+            "$pull": { exercises: req.params.exerciseId }
         });
 
         if (!training) {
@@ -218,14 +224,18 @@ export async function updateTrainingExerciseName(req: Request, res: Response) {
 
 export async function addSetToExercise(req: Request, res: Response) {
     try {
+        const newSet = {
+            weight: req.body.set.weight,
+            reps: req.body.set.reps,
+            count: req.body.set.count || (await Exercise.findOne({ "_id": new Types.ObjectId(req.params.exerciseId) })).sets.length + 1
+        }
         const exercise = await Exercise.updateOne(
             { "_id": new Types.ObjectId(req.params.exerciseId) },
-            { "$push": { 
-                sets: {
-                    weight: req.body.set.weight,
-                    reps: req.body.set.reps,
-                    count: req.body.set.count || (await Exercise.findOne({ "_id": new Types.ObjectId(req.params.exerciseId) })).sets.length + 1
-                } } }
+            {
+                "$push": {
+                    sets: newSet
+                }
+            }
         );
 
         if (!exercise) {
@@ -233,7 +243,7 @@ export async function addSetToExercise(req: Request, res: Response) {
             return res.status(404).send();
         }
 
-        return res.status(200).send();
+        return res.status(200).send(newSet);
     } catch (e) {
         console.error(`Error adding set to exercise in training with ID ${req.params.trainingId}:`, e);
         return res.status(500).send();
@@ -242,16 +252,26 @@ export async function addSetToExercise(req: Request, res: Response) {
 
 export async function removeSetFromExercise(req: Request, res: Response) {
     try {
-        // TODO: Add support for deleting sets from the middle
-        const exercise = await Exercise.updateOne(
+        const exercise = await Exercise.findOneAndUpdate(
             { "_id": new Types.ObjectId(req.params.exerciseId) },
-            { "$pull": { sets: { count: req.params.count } } }
+            { "$pull": { sets: { count: req.params.count } } },
+            { new: true }
         );
-
+        
         if (!exercise) {
             console.log(`Exercise with ID ${req.params.exerciseId} not found or couldn't remove set.`);
             return res.status(404).send();
         }
+
+        let newCount = 1;
+        // Re-number set counts after removal
+        if (exercise && Array.isArray((exercise as any).sets)) {
+            for (const set of (exercise as any).sets) {
+                set.count = newCount++;
+            }
+        }
+
+        await exercise.save();
 
         return res.status(200).send();
     } catch (e) {
@@ -264,7 +284,7 @@ export async function updateSetInExercise(req: Request, res: Response) {
     try {
         const { exerciseId } = req.params;
         let { count, weight, reps } = req.body.set;
-        
+
         // TODO: Support for updating set count
         // TODO: Make set count a computed field in the database
         if (!count) {
@@ -277,9 +297,10 @@ export async function updateSetInExercise(req: Request, res: Response) {
             console.log(`Exercise with ID ${exerciseId} not found.`);
             return res.status(404).send();
         }
-
+        
         // Find the set by count
-        const setIndex = exercise.sets.findIndex((s: any) => s.count === count);
+        const setIndex = exercise.sets.findIndex((s: SetType) => 
+            s.count.toString() === count as string);
         if (setIndex === -1) {
             console.log(`Set with count ${count} not found in exercise ${exerciseId}.`);
             return res.status(404).send();
