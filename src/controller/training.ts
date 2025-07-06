@@ -13,6 +13,8 @@ export async function getAllTrainingsForGroup(req: Request, res: Response) {
             console.log(`Trainings for group with ID ${req.groupId} not found.`);
             return res.status(404).send();
         }
+
+        await Training.populate(trainings, {path: 'exercises'});
         console.log(trainings);
         return res.status(200).send(trainings);
     } catch (e) {
