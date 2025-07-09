@@ -90,11 +90,17 @@ app.get('/logout/user', async (req: Request, res: Response) => {
     }
 });
 
-app.get('/user/checkLoginStatus', authenticateUser, async (req: Request, res: Response) => {
+app.get('/user/checkLoginStatus', authenticateUser, (req: Request, res: Response) => {
     try {
-        res.status(200).send({
-            'success': true
-        });
+        if (res.statusCode === 401) {
+            res.status(401).send({
+                'success': false
+            });
+        } else {
+            res.status(200).send({
+                'success': true
+            });
+        }
     }
     catch (e) {
         res.status(500).send({

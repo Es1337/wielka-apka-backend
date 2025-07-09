@@ -59,12 +59,35 @@ export async function addTraining(req: Request, res: Response) {
     }
 }
 
+export async function addTrainingWithExercises(req: Request, res: Response) {
+    try {
+        
+
+        let training = await Training.create({
+            "group": new Types.ObjectId(req.groupId),
+            "trainingName": req.body.trainingName,
+            "date": req.body.date,
+            "exercises": []
+        });
+
+        console.log(training);
+        return res.status(200).send(training);
+    } catch (e) {
+        console.error(`Error adding training for group with ID ${req.groupId}:`, e);
+        return res.status(500).send();
+    }
+}
+
 export async function removeTraining(req: Request, res: Response) {
     try {
         let training = await Training.findByIdAndDelete(req.params.trainingId);
 
+        training.exercises.forEach(async (exerciseId: string) => {
+            await Exercise.findByIdAndDelete(exerciseId);
+        });
+
         console.log(training);
-        return res.status(200).send();
+        return res.status(200).send(training);
     } catch (e) {
         console.error(`Error removing training for group with ID ${req.groupId}:`, e);
         return res.status(500).send();
@@ -141,6 +164,7 @@ export async function getTrainingExercise(req: Request, res: Response) {
 export async function addTrainingExercise(req: Request, res: Response) {
     try {
         let group = await Group.findById(req.groupId);
+        let newExercises: ExerciseType[] = [];
 
         for (let userId of group.users) {
 
@@ -166,9 +190,11 @@ export async function addTrainingExercise(req: Request, res: Response) {
                 console.log(`Training ${req.params.trainingId} not updated.`);
                 return res.status(404).send();
             }
+
+            newExercises.push(exercise);
         }
 
-        return res.status(200).send();
+        return res.status(200).send(newExercises);
     } catch (e) {
         console.error(`Error during updating training with id ${req.params.trainingId}:`, e);
         return res.status(500).send();

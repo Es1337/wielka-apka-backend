@@ -19,9 +19,8 @@ const authenticateUser = async (req: Request, res: Response, next: NextFunction)
     catch (e) {
         console.error("Mongo fetch error")
         console.log(e);
-        res.status(401).send({
-            error: e
-        })
+        res.status(401);
+        next();
     }
 }
 
