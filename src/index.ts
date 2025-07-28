@@ -111,6 +111,7 @@ app.get('/user/checkLoginStatus', authenticateUser, (req: Request, res: Response
 
 app.use('/group', authenticateUser, routes.groupRoutes);
 app.use('/friend', authenticateUser, routes.friendRoutes);
+app.use('/user', authenticateUser, routes.userRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running at http://127.0.0.1:${PORT}`);
